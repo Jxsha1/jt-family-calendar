@@ -1,0 +1,45 @@
+---
+const db = Astro.locals?.runtime?.env?.DB;
+const currentMonth = new Date().toISOString().slice(0, 7);
+let events = [];
+
+if (db) {
+  const { results } = await db
+    .prepare('SELECT * FROM events WHERE event_date LIKE ? ORDER BY event_date ASC, start_time ASC')
+    .bind(`${currentMonth}-%`)
+    .all();
+  events = results || [];
+}
+---
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>J+T Family Calendar</title>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen p-4 md:p-8">
+    <main class="max-w-4xl mx-auto">
+      <header class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">J+T Family Calendar ({currentMonth})</h1>
+      </header>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <h2 class="font-semibold text-lg mb-3">Upcoming Events</h2>
+        {events.length === 0 ? (
+          <p class="text-slate-500 text-sm">No events found for this month yet.</p>
+        ) : (
+          <ul class="space-y-2">
+            {events.map((ev) => (
+              <li class="p-3 rounded-lg border border-slate-100 flex justify-between items-center">
+                <div>
+                  <span class="font-medium">{ev.title}</span>
+                  <span class="text-xs text-slate-500 ml-2">{ev.event_date} {ev.start_time || ''}</span>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full bg-slate-100 font-medium">{ev.assigned_to}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </main>
+  </body>
+</html>
