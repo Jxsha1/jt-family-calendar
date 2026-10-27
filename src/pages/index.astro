@@ -1,18 +1,59 @@
 ---
-const db = Astro.locals?.runtime?.env?.DB;
-const currentMonth = new Date().toISOString().slice(0, 7);
-let events = [];
+const db = Astro.locals.runtime.env.DB
+const url = new URL(Astro.request.url)
+let selectedMonth = url.searchParams.get('month')
 
-if (db) {
-  const { results } = await db
-    .prepare('SELECT * FROM events WHERE event_date LIKE ? ORDER BY event_date ASC, start_time ASC')
-    .bind(`${currentMonth}-%`)
-    .all();
-  events = results || [];
+if (!selectedMonth) {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  selectedMonth = `${y}-${m}`
+}
+
+const [year, month] = selectedMonth.split('-').map(Number)
+
+const { results: events } = await db
+  .prepare('SELECT * FROM events WHERE event_date LIKE ? ORDER BY event_date ASC, start_time ASC')
+  .bind(`${selectedMonth}-%`)
+  .all()
+
+const daysInMonth = new Date(year, month, 0).getDate()
+const firstDay = new Date(year, month - 1, 1).getDay() 
+const startingBlankDays = firstDay === 0 ? 6 : firstDay - 1 
+
+const calendarDays = []
+for (let i = 0; i < startingBlankDays; i++) {
+  calendarDays.push(null)
+}
+for (let i = 1; i <= daysInMonth; i++) {
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+  calendarDays.push({
+    date: dateStr,
+    dayNum: i,
+    events: events.filter(e => e.event_date === dateStr)
+  })
+}
+
+const prevMonthDate = new Date(year, month - 2, 1)
+const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`
+const nextMonthDate = new Date(year, month, 1)
+const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}`
+const monthName = new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+
+const getCategoryStyles = (category) => {
+  switch (category) {
+    case 'West Ham': return 'bg-[#7A263A] text-white border-b-2 border-[#1BB1E7]'
+    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-4 border-amber-500'
+    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-4 border-emerald-500'
+    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-4 border-indigo-500'
+    case 'Work': return 'bg-slate-200 text-slate-800 border-l-4 border-slate-500'
+    default: return 'bg-white border border-slate-200 text-slate-800'
+  }
 }
 ---
+
 <html lang="en-GB">
- <head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>J+T Calendar</title>
@@ -24,29 +65,233 @@ if (db) {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="J+T Calendar" />
   </head>
-  <body class="bg-slate-50 text-slate-900 min-h-screen p-4 md:p-8">
-    <main class="max-w-4xl mx-auto">
-      <header class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-slate-800">J+T Family Calendar ({currentMonth})</h1>
-      </header>
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <h2 class="font-semibold text-lg mb-3">Upcoming Events</h2>
-        {events.length === 0 ? (
-          <p class="text-slate-500 text-sm">No events found for this month yet.</p>
-        ) : (
-          <ul class="space-y-2">
-            {events.map((ev) => (
-              <li class="p-3 rounded-lg border border-slate-100 flex justify-between items-center">
-                <div>
-                  <span class="font-medium">{ev.title}</span>
-                  <span class="text-xs text-slate-500 ml-2">{ev.event_date} {ev.start_time || ''}</span>
+  <body class="bg-slate-50 text-slate-900 font-sans antialiased pb-24">
+    
+    <header class="bg-slate-900 text-white sticky top-0 z-10 shadow-md safe-top">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href={`/?month=${prevMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold">&lt;</a>
+        <h1 class="text-xl md:text-2xl font-black tracking-tight">{monthName}</h1>
+        <a href={`/?month=${nextMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold">&gt;</a>
+      </div>
+      
+      <div class="max-w-6xl mx-auto px-4 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
+        <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-sm ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
+        <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-sm whitespace-nowrap">Family</button>
+        <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-sm whitespace-nowrap">Josh</button>
+        <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-sm whitespace-nowrap">Tanya</button>
+        <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-sm whitespace-nowrap">Anelise</button>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4">
+      
+      <div class="hidden md:grid grid-cols-7 gap-4 mb-2 font-bold text-slate-500 text-center uppercase text-sm">
+        <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+      </div>
+      
+      <div class="hidden md:grid grid-cols-7 gap-2 auto-rows-fr">
+        {calendarDays.map(day => (
+          day === null ? (
+            <div class="bg-slate-100 rounded-xl min-h-[120px] opacity-50"></div>
+          ) : (
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 min-h-[120px] flex flex-col">
+              <span class="font-bold text-slate-400 mb-2">{day.dayNum}</span>
+              <div class="flex flex-col gap-1 flex-1">
+                {day.events.map(event => (
+                  <div data-assigned={event.assigned_to} class={`event-item text-xs p-1.5 rounded shadow-sm ${getCategoryStyles(event.category)}`}>
+                    <div class="font-bold truncate">{event.title}</div>
+                    {event.start_time && <div class="opacity-90">{event.start_time}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        ))}
+      </div>
+
+      <div class="md:hidden flex flex-col gap-4">
+        {calendarDays.filter(d => d !== null && d.events.length > 0).map(day => (
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 px-4 py-2 font-black text-slate-700 border-b border-slate-200 flex items-center justify-between">
+              <span>{new Date(day.date).toLocaleString('en-GB', { weekday: 'long' })}</span>
+              <span class="text-lg">{day.dayNum}</span>
+            </div>
+            <div class="p-3 flex flex-col gap-3">
+              {day.events.map(event => (
+                <div data-assigned={event.assigned_to} class={`event-item p-3 rounded-xl shadow-sm ${getCategoryStyles(event.category)}`}>
+                  <div class="flex justify-between items-start gap-2 mb-1">
+                    <h3 class="font-bold text-base leading-tight">{event.title}</h3>
+                    {event.start_time && <span class="font-bold text-sm bg-white/30 px-2 py-0.5 rounded">{event.start_time}</span>}
+                  </div>
+                  <div class="flex gap-2 text-xs font-bold uppercase tracking-wider opacity-80 mt-2">
+                    <span>{event.assigned_to}</span>
+                    <span>•</span>
+                    <span>{event.category}</span>
+                  </div>
+                  {event.notes && <p class="text-sm mt-2 opacity-90 italic">{event.notes}</p>}
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full bg-slate-100 font-medium">{ev.assigned_to}</span>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
+        ))}
+        
+        {calendarDays.filter(d => d !== null && d.events.length > 0).length === 0 && (
+          <div class="text-center p-8 text-slate-400 font-bold">
+            No events planned for this month yet.
+          </div>
         )}
       </div>
+
     </main>
+
+    <button id="open-add-modal" class="fixed bottom-6 right-6 w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 flex items-center justify-center text-3xl font-light transition-transform active:scale-95 z-20 pb-1">
+      +
+    </button>
+
+    <div id="add-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 safe-bottom">
+      <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+        <div class="bg-slate-900 px-6 py-4 flex justify-between items-center">
+          <h2 class="text-white font-black text-lg">Add New Plan</h2>
+          <button id="close-modal" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+        </div>
+        
+        <form id="add-event-form" class="p-6 flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">What is happening?</label>
+            <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Dinner with the Bucklands" />
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
+              <input type="date" name="event_date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Time</label>
+              <input type="time" name="start_time" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Who</label>
+              <select name="assigned_to" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+                <option value="Family">Family</option>
+                <option value="Josh">Josh</option>
+                <option value="Tanya">Tanya</option>
+                <option value="Anelise">Anelise</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+              <select name="category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+                <option value="General">General</option>
+                <option value="Social">Social</option>
+                <option value="Appointment">Appointment</option>
+                <option value="West Ham">West Ham</option>
+                <option value="Ministry">Ministry</option>
+                <option value="Work">Work</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Notes (Optional)</label>
+            <input type="text" name="notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Location, reminders, etc" />
+          </div>
+          
+          <button type="submit" class="mt-2 w-full bg-slate-900 text-white font-black text-lg py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-colors">
+            Save to Calendar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .safe-top { padding-top: env(safe-area-inset-top); }
+      .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+      @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+
+    <script>
+      const modal = document.getElementById('add-modal')
+      const openBtn = document.getElementById('open-add-modal')
+      const closeBtn = document.getElementById('close-modal')
+      const form = document.getElementById('add-event-form')
+      const filterBtns = document.querySelectorAll('.filter-btn')
+
+      openBtn.addEventListener('click', () => modal.classList.remove('hidden'))
+      
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault()
+        modal.classList.add('hidden')
+      })
+
+      let activeFilter = 'All'
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          filterBtns.forEach(b => {
+            b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900')
+            if (b.dataset.person !== 'All') {
+              b.classList.add('opacity-50')
+            }
+          })
+          
+          const target = e.currentTarget
+          target.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900')
+          target.classList.remove('opacity-50')
+          
+          activeFilter = target.dataset.person
+          
+          document.querySelectorAll('.event-item').forEach(el => {
+            const assigned = el.dataset.assigned
+            if (activeFilter === 'All' || assigned === activeFilter || assigned === 'Family') {
+              el.style.display = 'block'
+            } else {
+              el.style.display = 'none'
+            }
+          })
+        })
+      })
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const submitBtn = form.querySelector('button[type="submit"]')
+        const originalText = submitBtn.innerText
+        submitBtn.innerText = 'Saving...'
+        submitBtn.disabled = true
+
+        const formData = new FormData(form)
+        const data = Object.fromEntries(formData.entries())
+        
+        try {
+          const res = await fetch('/api/events.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+          
+          if (res.ok) {
+            window.location.reload()
+          } else {
+            alert('Failed to save event. Check the network tab.')
+            submitBtn.innerText = originalText
+            submitBtn.disabled = false
+          }
+        } catch (err) {
+          console.error(err)
+          alert('Network error whilst saving.')
+          submitBtn.innerText = originalText
+          submitBtn.disabled = false
+        }
+      })
+    </script>
   </body>
 </html>
