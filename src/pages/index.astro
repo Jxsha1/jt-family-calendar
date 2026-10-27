@@ -1,43 +1,88 @@
 ---
-const db = Astro.locals.runtime.env.DB;
-const url = new URL(Astro.request.url);
-let selectedMonth = url.searchParams.get('month');
+const getFormattedDate = (dObj) => {
+  return `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
+};
 
-if (!selectedMonth) {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  selectedMonth = `${y}-${m}`;
+const url = new URL(Astro.request.url);
+let view = url.searchParams.get('v') || 'month';
+if (!['month', 'week', 'day'].includes(view)) view = 'month';
+
+let dateParam = url.searchParams.get('d');
+let anchor = dateParam ? new Date(dateParam) : new Date();
+if (isNaN(anchor.getTime())) anchor = new Date();
+
+const y = anchor.getFullYear();
+const m = anchor.getMonth();
+const d = anchor.getDate();
+
+let displayDays = [];
+let prevAnchor, nextAnchor, headerTitle, queryStart, queryEnd;
+
+if (view === 'month') {
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const firstDay = new Date(y, m, 1).getDay();
+  const startingBlanks = firstDay === 0 ? 6 : firstDay - 1;
+  
+  for (let i = 0; i < startingBlanks; i++) displayDays.push(null);
+  for (let i = 1; i <= daysInMonth; i++) displayDays.push(new Date(y, m, i));
+  
+  prevAnchor = new Date(y, m - 1, 1);
+  nextAnchor = new Date(y, m + 1, 1);
+  headerTitle = anchor.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  
+  queryStart = getFormattedDate(new Date(y, m, 1));
+  queryEnd = getFormattedDate(new Date(y, m + 1, 0));
+} 
+else if (view === 'week') {
+  const dayOfWeek = anchor.getDay();
+  const diffToMonday = anchor.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  const startOfWeek = new Date(y, m, diffToMonday);
+  
+  for (let i = 0; i < 7; i++) {
+    displayDays.push(new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i));
+  }
+  
+  prevAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() - 7);
+  nextAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 7);
+  
+  const endOfWeek = displayDays[6];
+  let monthStr = startOfWeek.toLocaleString('en-GB', { month: 'short' });
+  if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
+    monthStr += ` / ${endOfWeek.toLocaleString('en-GB', { month: 'short' })}`;
+  }
+  headerTitle = `Week of ${startOfWeek.getDate()} ${monthStr} ${startOfWeek.getFullYear()}`;
+  
+  queryStart = getFormattedDate(startOfWeek);
+  queryEnd = getFormattedDate(endOfWeek);
+} 
+else if (view === 'day') {
+  displayDays.push(new Date(y, m, d));
+  prevAnchor = new Date(y, m, d - 1);
+  nextAnchor = new Date(y, m, d + 1);
+  headerTitle = anchor.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  
+  queryStart = getFormattedDate(anchor);
+  queryEnd = queryStart;
 }
 
-const [year, month] = selectedMonth.split('-').map(Number);
+const prevUrl = `/?v=${view}&d=${getFormattedDate(prevAnchor)}`;
+const nextUrl = `/?v=${view}&d=${getFormattedDate(nextAnchor)}`;
 
-const { results: events } = await db
-  .prepare('SELECT * FROM events WHERE event_date LIKE ? ORDER BY event_date ASC, start_time ASC')
-  .bind(`${selectedMonth}-%`)
+const db = Astro.locals.runtime.env.DB;
+const { results: rawEvents } = await db
+  .prepare('SELECT * FROM events WHERE event_date >= ? AND event_date <= ? ORDER BY event_date ASC, start_time ASC')
+  .bind(queryStart, queryEnd)
   .all();
 
-const daysInMonth = new Date(year, month, 0).getDate();
-const firstDay = new Date(year, month - 1, 1).getDay();
-const startingBlankDays = firstDay === 0 ? 6 : firstDay - 1;
-
-const calendarDays = [];
-for (let i = 0; i < startingBlankDays; i++) {
-  calendarDays.push(null);
-}
-for (let i = 1; i <= daysInMonth; i++) {
-  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-  calendarDays.push({
+const calendarDays = displayDays.map(dateObj => {
+  if (dateObj === null) return null;
+  const dateStr = getFormattedDate(dateObj);
+  return {
     date: dateStr,
-    dayNum: i,
-    events: events.filter(e => e.event_date === dateStr)
-  });
-}
-
-const prevMonthDate = new Date(year, month - 2, 1);
-const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
-const nextMonthDate = new Date(year, month, 1);
-const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}`;
+    dayNum: dateObj.getDate(),
+    events: rawEvents.filter(e => e.event_date === dateStr)
+  };
+});
 
 const getCategoryStyles = (category) => {
   switch (category) {
@@ -68,47 +113,63 @@ const getCategoryStyles = (category) => {
     
     <header class="bg-slate-900 text-white sticky top-0 z-10 shadow-md safe-top">
       <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href={`/?month=${prevMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&lt;</a>
+        <a href={prevUrl} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&lt;</a>
         
-        <div class="flex-1 flex justify-center mx-2 relative">
+        <div class="flex-1 flex flex-col items-center justify-center mx-2 relative">
+          <div class="text-lg md:text-xl font-black text-white text-center leading-tight mb-1">{headerTitle}</div>
           <input 
-            type="month" 
-            id="month-selector"
-            value={selectedMonth} 
-            class="bg-slate-800 text-white font-black text-lg md:text-xl rounded-xl px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none"
+            type="date" 
+            id="date-selector"
+            value={getFormattedDate(anchor)} 
+            class="bg-slate-800 text-slate-300 font-bold text-xs rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none"
           />
         </div>
 
-        <a href={`/?month=${nextMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&gt;</a>
+        <a href={nextUrl} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&gt;</a>
       </div>
       
-      <div class="max-w-6xl mx-auto px-4 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
-        <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-sm ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
-        <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-sm whitespace-nowrap">Family</button>
-        <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-sm whitespace-nowrap">Josh</button>
-        <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-sm whitespace-nowrap">Tanya</button>
-        <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-sm whitespace-nowrap">Anelise</button>
+      <div class="max-w-6xl mx-auto px-4 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        
+        <div class="flex bg-slate-800 rounded-lg p-1 shrink-0 w-full sm:w-auto justify-between">
+          <a href={`/?v=day&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-sm font-bold text-center flex-1 sm:flex-none ${view === 'day' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Day</a>
+          <a href={`/?v=week&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-sm font-bold text-center flex-1 sm:flex-none ${view === 'week' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Week</a>
+          <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-sm font-bold text-center flex-1 sm:flex-none ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
+        </div>
+
+        <div class="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+          <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-sm ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
+          <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-sm whitespace-nowrap">Family</button>
+          <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-sm whitespace-nowrap">Josh</button>
+          <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-sm whitespace-nowrap">Tanya</button>
+          <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-sm whitespace-nowrap">Anelise</button>
+        </div>
       </div>
     </header>
 
     <main class="max-w-6xl mx-auto p-4">
       
-      <div class="hidden md:grid grid-cols-7 gap-4 mb-2 font-bold text-slate-500 text-center uppercase text-sm">
-        <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-      </div>
+      {view !== 'day' && (
+        <div class="hidden md:grid grid-cols-7 gap-4 mb-2 font-bold text-slate-500 text-center uppercase text-sm">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+      )}
       
-      <div class="hidden md:grid grid-cols-7 gap-2 auto-rows-fr">
+      <div class={`hidden md:grid gap-2 auto-rows-fr ${view === 'day' ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-7'}`}>
         {calendarDays.map(day => (
           day === null ? (
             <div class="bg-slate-100 rounded-xl min-h-[120px] opacity-50"></div>
           ) : (
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 min-h-[120px] flex flex-col">
-              <span class="font-bold text-slate-400 mb-2">{day.dayNum}</span>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-400">{day.dayNum}</span>
+                {view === 'day' && <span class="font-bold text-slate-300 text-sm uppercase">{new Date(day.date).toLocaleString('en-GB', { weekday: 'long' })}</span>}
+              </div>
               <div class="flex flex-col gap-1 flex-1">
                 {day.events.map(event => (
                   <div data-assigned={event.assigned_to || 'Family'} class={`event-item text-xs p-1.5 rounded shadow-sm ${getCategoryStyles(event.category)}`}>
                     <div class="font-bold truncate">{event.title}</div>
                     {event.start_time && <div class="opacity-90">{event.start_time}</div>}
+                    {view === 'day' && event.notes && <div class="opacity-80 italic mt-1">{event.notes}</div>}
                   </div>
                 ))}
               </div>
@@ -145,7 +206,7 @@ const getCategoryStyles = (category) => {
         
         {calendarDays.filter(d => d !== null && d.events.length > 0).length === 0 && (
           <div class="text-center p-8 text-slate-400 font-bold">
-            No events planned for this month yet.
+            No events planned for this view yet.
           </div>
         )}
       </div>
@@ -172,7 +233,7 @@ const getCategoryStyles = (category) => {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-              <input type="date" name="event_date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              <input type="date" name="event_date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={getFormattedDate(anchor)} />
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Time</label>
@@ -221,7 +282,7 @@ const getCategoryStyles = (category) => {
       .safe-top { padding-top: env(safe-area-inset-top); }
       .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
       
-      input[type="month"]::-webkit-calendar-picker-indicator {
+      input[type="date"]::-webkit-calendar-picker-indicator {
         filter: invert(1);
         opacity: 0.7;
         cursor: pointer;
@@ -235,9 +296,12 @@ const getCategoryStyles = (category) => {
     </style>
 
     <script>
-      const monthSelector = document.getElementById('month-selector');
-      monthSelector.addEventListener('change', (e) => {
-        window.location.href = `/?month=${e.target.value}`;
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentView = urlParams.get('v') || 'month';
+
+      const dateSelector = document.getElementById('date-selector');
+      dateSelector.addEventListener('change', (e) => {
+        window.location.href = `/?v=${currentView}&d=${e.target.value}`;
       });
 
       const modal = document.getElementById('add-modal');
