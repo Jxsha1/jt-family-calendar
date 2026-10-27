@@ -1,0 +1,17 @@
+├── public/
+│   ├── manifest.json          # PWA settings for mobile home screen
+│   └── icon-192.png           # App icon
+├── src/
+│   ├── components/
+│   │   ├── CalendarGrid.astro # 7-column month view + mobile agenda list
+│   │   ├── QuickAddModal.astro# Slide-up sheet to add events in 3 taps
+│   │   └── NotesDrawer.astro  # Monthly scratchpad (replaces bottom NOTES row)
+│   └── pages/
+│       ├── index.astro        # Main dashboard (SSR fetches current month from D1)
+│       └── api/
+│           ├── events.json.js      # GET and POST event handlers
+│           ├── events/[id].json.js # DELETE and EDIT event handler
+│           └── notes.json.js       # Saves monthly scratchpad notes
+├── astro.config.mjs
+├── package.json
+└── tailwind.config.mjs
