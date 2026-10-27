@@ -1,5 +1,3 @@
-Handles fetching events for a given month (GET) and adding new family plans (POST).
-
 export const GET = async ({ request, locals }) => {
   const db = locals.runtime.env.DB;
   const url = new URL(request.url);
