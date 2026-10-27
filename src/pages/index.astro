@@ -1,55 +1,54 @@
 ---
-const db = Astro.locals.runtime.env.DB
-const url = new URL(Astro.request.url)
-let selectedMonth = url.searchParams.get('month')
+const db = Astro.locals.runtime.env.DB;
+const url = new URL(Astro.request.url);
+let selectedMonth = url.searchParams.get('month');
 
 if (!selectedMonth) {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  selectedMonth = `${y}-${m}`
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  selectedMonth = `${y}-${m}`;
 }
 
-const [year, month] = selectedMonth.split('-').map(Number)
+const [year, month] = selectedMonth.split('-').map(Number);
 
 const { results: events } = await db
   .prepare('SELECT * FROM events WHERE event_date LIKE ? ORDER BY event_date ASC, start_time ASC')
   .bind(`${selectedMonth}-%`)
-  .all()
+  .all();
 
-const daysInMonth = new Date(year, month, 0).getDate()
-const firstDay = new Date(year, month - 1, 1).getDay() 
-const startingBlankDays = firstDay === 0 ? 6 : firstDay - 1 
+const daysInMonth = new Date(year, month, 0).getDate();
+const firstDay = new Date(year, month - 1, 1).getDay();
+const startingBlankDays = firstDay === 0 ? 6 : firstDay - 1;
 
-const calendarDays = []
+const calendarDays = [];
 for (let i = 0; i < startingBlankDays; i++) {
-  calendarDays.push(null)
+  calendarDays.push(null);
 }
 for (let i = 1; i <= daysInMonth; i++) {
-  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
   calendarDays.push({
     date: dateStr,
     dayNum: i,
     events: events.filter(e => e.event_date === dateStr)
-  })
+  });
 }
 
-const prevMonthDate = new Date(year, month - 2, 1)
-const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`
-const nextMonthDate = new Date(year, month, 1)
-const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}`
-const monthName = new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+const prevMonthDate = new Date(year, month - 2, 1);
+const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+const nextMonthDate = new Date(year, month, 1);
+const nextMonthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
 const getCategoryStyles = (category) => {
   switch (category) {
-    case 'West Ham': return 'bg-[#7A263A] text-white border-b-2 border-[#1BB1E7]'
-    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-4 border-amber-500'
-    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-4 border-emerald-500'
-    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-4 border-indigo-500'
-    case 'Work': return 'bg-slate-200 text-slate-800 border-l-4 border-slate-500'
-    default: return 'bg-white border border-slate-200 text-slate-800'
+    case 'West Ham': return 'bg-[#7A263A] text-white border-b-2 border-[#1BB1E7]';
+    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-4 border-amber-500';
+    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-4 border-emerald-500';
+    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-4 border-indigo-500';
+    case 'Work': return 'bg-slate-200 text-slate-800 border-l-4 border-slate-500';
+    default: return 'bg-white border border-slate-200 text-slate-800';
   }
-}
+};
 ---
 
 <html lang="en-GB">
@@ -69,9 +68,18 @@ const getCategoryStyles = (category) => {
     
     <header class="bg-slate-900 text-white sticky top-0 z-10 shadow-md safe-top">
       <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href={`/?month=${prevMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold">&lt;</a>
-        <h1 class="text-xl md:text-2xl font-black tracking-tight">{monthName}</h1>
-        <a href={`/?month=${nextMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold">&gt;</a>
+        <a href={`/?month=${prevMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&lt;</a>
+        
+        <div class="flex-1 flex justify-center mx-2 relative">
+          <input 
+            type="month" 
+            id="month-selector"
+            value={selectedMonth} 
+            class="bg-slate-800 text-white font-black text-lg md:text-xl rounded-xl px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none"
+          />
+        </div>
+
+        <a href={`/?month=${nextMonthStr}`} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&gt;</a>
       </div>
       
       <div class="max-w-6xl mx-auto px-4 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
@@ -98,7 +106,7 @@ const getCategoryStyles = (category) => {
               <span class="font-bold text-slate-400 mb-2">{day.dayNum}</span>
               <div class="flex flex-col gap-1 flex-1">
                 {day.events.map(event => (
-                  <div data-assigned={event.assigned_to} class={`event-item text-xs p-1.5 rounded shadow-sm ${getCategoryStyles(event.category)}`}>
+                  <div data-assigned={event.assigned_to || 'Family'} class={`event-item text-xs p-1.5 rounded shadow-sm ${getCategoryStyles(event.category)}`}>
                     <div class="font-bold truncate">{event.title}</div>
                     {event.start_time && <div class="opacity-90">{event.start_time}</div>}
                   </div>
@@ -118,15 +126,15 @@ const getCategoryStyles = (category) => {
             </div>
             <div class="p-3 flex flex-col gap-3">
               {day.events.map(event => (
-                <div data-assigned={event.assigned_to} class={`event-item p-3 rounded-xl shadow-sm ${getCategoryStyles(event.category)}`}>
+                <div data-assigned={event.assigned_to || 'Family'} class={`event-item p-3 rounded-xl shadow-sm ${getCategoryStyles(event.category)}`}>
                   <div class="flex justify-between items-start gap-2 mb-1">
                     <h3 class="font-bold text-base leading-tight">{event.title}</h3>
                     {event.start_time && <span class="font-bold text-sm bg-white/30 px-2 py-0.5 rounded">{event.start_time}</span>}
                   </div>
                   <div class="flex gap-2 text-xs font-bold uppercase tracking-wider opacity-80 mt-2">
-                    <span>{event.assigned_to}</span>
+                    <span>{event.assigned_to || 'Family'}</span>
                     <span>•</span>
-                    <span>{event.category}</span>
+                    <span>{event.category || 'General'}</span>
                   </div>
                   {event.notes && <p class="text-sm mt-2 opacity-90 italic">{event.notes}</p>}
                 </div>
@@ -212,6 +220,13 @@ const getCategoryStyles = (category) => {
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       .safe-top { padding-top: env(safe-area-inset-top); }
       .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+      
+      input[type="month"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        opacity: 0.7;
+        cursor: pointer;
+      }
+
       @keyframes slideUp {
         from { transform: translateY(100%); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
@@ -220,78 +235,83 @@ const getCategoryStyles = (category) => {
     </style>
 
     <script>
-      const modal = document.getElementById('add-modal')
-      const openBtn = document.getElementById('open-add-modal')
-      const closeBtn = document.getElementById('close-modal')
-      const form = document.getElementById('add-event-form')
-      const filterBtns = document.querySelectorAll('.filter-btn')
+      const monthSelector = document.getElementById('month-selector');
+      monthSelector.addEventListener('change', (e) => {
+        window.location.href = `/?month=${e.target.value}`;
+      });
 
-      openBtn.addEventListener('click', () => modal.classList.remove('hidden'))
+      const modal = document.getElementById('add-modal');
+      const openBtn = document.getElementById('open-add-modal');
+      const closeBtn = document.getElementById('close-modal');
+      const form = document.getElementById('add-event-form');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+
+      openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
       
       closeBtn.addEventListener('click', (e) => {
-        e.preventDefault()
-        modal.classList.add('hidden')
-      })
+        e.preventDefault();
+        modal.classList.add('hidden');
+      });
 
-      let activeFilter = 'All'
+      let activeFilter = 'All';
 
       filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
           filterBtns.forEach(b => {
-            b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900')
+            b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900');
             if (b.dataset.person !== 'All') {
-              b.classList.add('opacity-50')
+              b.classList.add('opacity-50');
             }
-          })
+          });
           
-          const target = e.currentTarget
-          target.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900')
-          target.classList.remove('opacity-50')
+          const target = e.currentTarget;
+          target.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900');
+          target.classList.remove('opacity-50');
           
-          activeFilter = target.dataset.person
+          activeFilter = target.dataset.person;
           
           document.querySelectorAll('.event-item').forEach(el => {
-            const assigned = el.dataset.assigned
-            if (activeFilter === 'All' || assigned === activeFilter || assigned === 'Family') {
-              el.style.display = 'block'
+            const assigned = el.dataset.assigned || 'Family';
+            if (activeFilter === 'All' || assigned === activeFilter) {
+              el.style.display = 'block';
             } else {
-              el.style.display = 'none'
+              el.style.display = 'none';
             }
-          })
-        })
-      })
+          });
+        });
+      });
 
       form.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const submitBtn = form.querySelector('button[type="submit"]')
-        const originalText = submitBtn.innerText
-        submitBtn.innerText = 'Saving...'
-        submitBtn.disabled = true
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Saving...';
+        submitBtn.disabled = true;
 
-        const formData = new FormData(form)
-        const data = Object.fromEntries(formData.entries())
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
         
         try {
           const res = await fetch('/api/events.json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-          })
+          });
           
           if (res.ok) {
-            window.location.reload()
+            window.location.reload();
           } else {
-            alert('Failed to save event. Check the network tab.')
-            submitBtn.innerText = originalText
-            submitBtn.disabled = false
+            alert('Failed to save event. Check the network tab.');
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
           }
         } catch (err) {
-          console.error(err)
-          alert('Network error whilst saving.')
-          submitBtn.innerText = originalText
-          submitBtn.disabled = false
+          console.error(err);
+          alert('Network error whilst saving.');
+          submitBtn.innerText = originalText;
+          submitBtn.disabled = false;
         }
-      })
+      });
     </script>
   </body>
 </html>
