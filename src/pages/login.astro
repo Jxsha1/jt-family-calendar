@@ -1,0 +1,54 @@
+---
+const passwordEnv = Astro.locals.runtime.env?.CALENDAR_PASSWORD;
+let error = false;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const submittedPassword = data.get('password');
+
+  if (submittedPassword === passwordEnv && passwordEnv) {
+    Astro.cookies.set('calendar_session', submittedPassword, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax'
+    });
+    return Astro.redirect('/');
+  } else {
+    error = true;
+  }
+}
+---
+
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Login - J+T Calendar</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <meta name="theme-color" content="#0f172a" />
+  </head>
+  <body class="bg-slate-900 text-white h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-sm border border-slate-700">
+      <h1 class="text-3xl font-black mb-2 text-center tracking-tight">J+T Calendar</h1>
+      <p class="text-slate-400 text-center mb-8 font-bold text-sm">Enter the family password to access</p>
+      
+      <form method="POST" class="flex flex-col gap-4">
+        <input 
+          type="password" 
+          name="password" 
+          required 
+          class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-4 font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center" 
+          placeholder="Password" 
+        />
+        {error && <p class="text-red-400 font-bold text-sm text-center">Incorrect password. Try again.</p>}
+        <button type="submit" class="w-full bg-emerald-500 text-white font-black text-lg py-4 rounded-xl shadow-lg hover:bg-emerald-600 transition-colors mt-2">
+          Unlock Calendar
+        </button>
+      </form>
+    </div>
+  </body>
+</html>
