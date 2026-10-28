@@ -86,12 +86,12 @@ const calendarDays = displayDays.map(dateObj => {
 
 const getCategoryStyles = (category) => {
   switch (category) {
-    case 'West Ham': return 'bg-[#7A263A] text-white border-b-2 border-[#1BB1E7]';
-    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-4 border-amber-500';
-    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-4 border-emerald-500';
-    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-4 border-indigo-500';
-    case 'Work': return 'bg-slate-200 text-slate-800 border-l-4 border-slate-500';
-    default: return 'bg-white border border-slate-200 text-slate-800';
+    case 'West Ham': return 'bg-[#7A263A] text-white border-l-[4px] border-[#1BB1E7]';
+    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-[4px] border-amber-500';
+    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-[4px] border-emerald-500';
+    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-[4px] border-indigo-500';
+    case 'Work': return 'bg-slate-200 text-slate-800 border-l-[4px] border-slate-500';
+    default: return 'bg-slate-50 border border-slate-200 text-slate-800';
   }
 };
 ---
@@ -109,10 +109,10 @@ const getCategoryStyles = (category) => {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="J+T Calendar" />
   </head>
-  <body class="bg-slate-50 text-slate-900 font-sans antialiased pb-24">
+  <body class="bg-slate-100 text-slate-900 font-sans antialiased pb-24">
     
     <header class="bg-slate-900 text-white sticky top-0 z-10 shadow-md safe-top">
-      <div class="max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+      <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
         <a href={prevUrl} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&lt;</a>
         
         <div class="flex-1 flex flex-col items-center justify-center mx-2 relative">
@@ -128,59 +128,72 @@ const getCategoryStyles = (category) => {
         <a href={nextUrl} class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 font-bold flex-shrink-0">&gt;</a>
       </div>
       
-      <div class="max-w-6xl mx-auto px-2 sm:px-4 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+      <div class="max-w-6xl mx-auto px-3 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         
         <div class="flex bg-slate-800 rounded-lg p-1 shrink-0 w-full sm:w-auto justify-between">
-          <a href={`/?v=day&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs sm:text-sm font-bold text-center flex-1 sm:flex-none ${view === 'day' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Day</a>
-          <a href={`/?v=week&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs sm:text-sm font-bold text-center flex-1 sm:flex-none ${view === 'week' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Week</a>
-          <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs sm:text-sm font-bold text-center flex-1 sm:flex-none ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
+          <a href={`/?v=day&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none ${view === 'day' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Day</a>
+          <a href={`/?v=week&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none ${view === 'week' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Week</a>
+          <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
         </div>
 
         <div class="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
-          <button data-person="All" class="filter-btn px-3 sm:px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-xs sm:text-sm ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
-          <button data-person="Family" class="filter-btn px-3 sm:px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap">Family</button>
-          <button data-person="Josh" class="filter-btn px-3 sm:px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs sm:text-sm whitespace-nowrap">Josh</button>
-          <button data-person="Tanya" class="filter-btn px-3 sm:px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-xs sm:text-sm whitespace-nowrap">Tanya</button>
-          <button data-person="Anelise" class="filter-btn px-3 sm:px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-xs sm:text-sm whitespace-nowrap">Anelise</button>
+          <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-xs ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
+          <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-xs whitespace-nowrap">Family</button>
+          <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs whitespace-nowrap">Josh</button>
+          <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-xs whitespace-nowrap">Tanya</button>
+          <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-xs whitespace-nowrap">Anelise</button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-1 sm:p-4">
+    <main class="max-w-6xl mx-auto p-0 sm:p-4">
       
-      {view !== 'day' && (
-        <div class="grid grid-cols-7 gap-1 sm:gap-4 mb-1 sm:mb-2 font-bold text-slate-500 text-center uppercase text-[10px] sm:text-sm">
-          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-        </div>
-      )}
-      
-      <div class={`grid gap-1 sm:gap-2 auto-rows-fr ${view === 'day' ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-7'}`}>
-        {calendarDays.map(day => (
-          day === null ? (
-            <div class="bg-slate-100 rounded-lg sm:rounded-xl min-h-[80px] sm:min-h-[120px] opacity-50"></div>
-          ) : (
-            <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-1 sm:p-2 min-h-[80px] sm:min-h-[120px] flex flex-col overflow-hidden">
-              <div class="flex justify-between items-center mb-1 sm:mb-2">
-                <span class="font-bold text-slate-400 text-xs sm:text-base">{day.dayNum}</span>
-                {view === 'day' && <span class="font-bold text-slate-300 text-sm uppercase">{new Date(day.date).toLocaleString('en-GB', { weekday: 'long' })}</span>}
-              </div>
-              <div class="flex flex-col gap-0.5 sm:gap-1 flex-1 overflow-y-auto no-scrollbar">
-                {day.events.map(event => (
-                  <div data-assigned={event.assigned_to || 'Family'} class={`event-item text-[9px] sm:text-xs p-1 sm:p-1.5 rounded shadow-sm leading-tight ${getCategoryStyles(event.category)}`}>
-                    <div class="font-bold truncate">{event.title}</div>
-                    {event.start_time && <div class="opacity-90 truncate">{event.start_time}</div>}
-                    {view === 'day' && event.notes && <div class="opacity-80 italic mt-1 whitespace-normal break-words">{event.notes}</div>}
-                  </div>
-                ))}
-              </div>
+      <div class={`${view !== 'day' ? 'overflow-x-auto w-full bg-white shadow-sm sm:rounded-xl sm:border border-slate-300' : ''}`}>
+        <div class={`${view !== 'day' ? 'min-w-[1050px]' : ''}`}>
+          
+          {view !== 'day' && (
+            <div class="grid grid-cols-7 bg-slate-100 font-bold text-slate-500 text-center uppercase text-[10px] tracking-widest border-b border-slate-300">
+              <div class="border-r border-slate-300 py-2">Mon</div>
+              <div class="border-r border-slate-300 py-2">Tue</div>
+              <div class="border-r border-slate-300 py-2">Wed</div>
+              <div class="border-r border-slate-300 py-2">Thu</div>
+              <div class="border-r border-slate-300 py-2">Fri</div>
+              <div class="border-r border-slate-300 py-2">Sat</div>
+              <div class="py-2">Sun</div>
             </div>
-          )
-        ))}
+          )}
+          
+          <div class={`grid ${view === 'day' ? 'grid-cols-1 max-w-2xl mx-auto gap-4 p-4' : 'grid-cols-7'}`}>
+            {calendarDays.map((day, index) => {
+              const isLastInRow = (index + 1) % 7 === 0;
+              return day === null ? (
+                <div class={`bg-slate-50 min-h-[140px] border-b border-slate-300 ${!isLastInRow ? 'border-r' : ''}`}></div>
+              ) : (
+                <div class={`bg-white min-h-[140px] flex flex-col ${view === 'day' ? 'rounded-2xl shadow-sm border border-slate-200 p-4' : `p-1.5 border-b border-slate-300 ${!isLastInRow ? 'border-r' : ''}`}`}>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class={`font-bold ${view === 'day' ? 'text-slate-400 text-base' : 'text-slate-400 text-xs'}`}>{day.dayNum}</span>
+                    {view === 'day' && <span class="font-bold text-slate-300 text-sm uppercase">{new Date(day.date).toLocaleString('en-GB', { weekday: 'long' })}</span>}
+                  </div>
+                  <div class="flex flex-col gap-1 flex-1 overflow-y-auto no-scrollbar">
+                    {day.events.map(event => (
+                      <div data-assigned={event.assigned_to || 'Family'} class={`event-item text-[11px] p-1.5 rounded-sm leading-tight break-words whitespace-normal ${getCategoryStyles(event.category)}`}>
+                        <div class="font-bold">{event.title}</div>
+                        {event.start_time && <div class="opacity-90 text-[10px] mt-0.5">{event.start_time}</div>}
+                        {view === 'day' && event.notes && <div class="opacity-80 italic mt-1">{event.notes}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+        </div>
       </div>
 
     </main>
 
-    <button id="open-add-modal" class="fixed bottom-6 right-6 w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 flex items-center justify-center text-3xl font-light transition-transform active:scale-95 z-20 pb-1">
+    <button id="open-add-modal" class="fixed bottom-6 right-6 w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 flex items-center justify-center text-3xl font-light transition-transform active:scale-95 z-20 pb-1">
       +
     </button>
 
