@@ -153,10 +153,10 @@ const getCategoryStyles = (category) => {
       </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-0 sm:p-4">
+    <main class="max-w-6xl mx-auto p-0 sm:p-4 touch-pan-x touch-pan-y">
       
       <div class={`${view !== 'day' ? 'overflow-x-auto w-full bg-white shadow-sm sm:rounded-xl sm:border border-slate-300' : ''}`}>
-        <div id="calendar-grid" class={`${view !== 'day' ? 'min-w-[1050px]' : ''}`}>
+        <div id="calendar-grid" class={`${view !== 'day' ? 'min-w-[1050px] transform-origin-top-left' : ''}`}>
           
           {view !== 'day' && (
             <div class="grid grid-cols-7 bg-slate-100 font-bold text-slate-500 text-center uppercase text-[10px] tracking-widest border-b border-slate-300">
@@ -295,6 +295,44 @@ const getCategoryStyles = (category) => {
           calendarGrid.style.zoom = e.target.value;
           localStorage.setItem('calendar-zoom', e.target.value);
         });
+
+        // Custom Pinch-to-Zoom logic to bypass iOS PWA restrictions
+        let initialDistance = 0;
+        let initialZoom = 1;
+
+        const getDistance = (touches) => {
+          const dx = touches[0].clientX - touches[1].clientX;
+          const dy = touches[0].clientY - touches[1].clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        calendarGrid.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 2) {
+            initialDistance = getDistance(e.touches);
+            initialZoom = parseFloat(zoomSlider.value) || 1;
+          }
+        }, { passive: true });
+
+        calendarGrid.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 2) {
+            e.preventDefault(); // Stop iOS from scrolling wildly when we pinch
+            const currentDistance = getDistance(e.touches);
+            const scale = currentDistance / initialDistance;
+            let newZoom = initialZoom * scale;
+            
+            if (newZoom < 0.3) newZoom = 0.3;
+            if (newZoom > 1.5) newZoom = 1.5;
+            
+            calendarGrid.style.zoom = newZoom;
+            zoomSlider.value = newZoom;
+          }
+        }, { passive: false });
+
+        calendarGrid.addEventListener('touchend', (e) => {
+          if (e.touches.length < 2) {
+            localStorage.setItem('calendar-zoom', zoomSlider.value);
+          }
+        }, { passive: true });
       }
 
       const urlParams = new URLSearchParams(window.location.search);
