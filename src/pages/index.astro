@@ -1,99 +1,99 @@
 ---
 const getFormattedDate = (dObj) => {
-  return `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
-};
-
-const url = new URL(Astro.request.url);
-let view = url.searchParams.get('v') || 'month';
-if (!['month', 'week', 'day'].includes(view)) view = 'month';
-
-let dateParam = url.searchParams.get('d');
-let anchor = dateParam ? new Date(dateParam) : new Date();
-if (isNaN(anchor.getTime())) anchor = new Date();
-
-const y = anchor.getFullYear();
-const m = anchor.getMonth();
-const d = anchor.getDate();
-
-let displayDays = [];
-let prevAnchor, nextAnchor, headerTitle, queryStart, queryEnd;
-
-if (view === 'month') {
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const firstDay = new Date(y, m, 1).getDay();
-  const startingBlanks = firstDay === 0 ? 6 : firstDay - 1;
-  
-  for (let i = 0; i < startingBlanks; i++) displayDays.push(null);
-  for (let i = 1; i <= daysInMonth; i++) displayDays.push(new Date(y, m, i));
-  
-  prevAnchor = new Date(y, m - 1, 1);
-  nextAnchor = new Date(y, m + 1, 1);
-  headerTitle = anchor.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
-  
-  queryStart = getFormattedDate(new Date(y, m, 1));
-  queryEnd = getFormattedDate(new Date(y, m + 1, 0));
-} 
-else if (view === 'week') {
-  const dayOfWeek = anchor.getDay();
-  const diffToMonday = anchor.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-  const startOfWeek = new Date(y, m, diffToMonday);
-  
-  for (let i = 0; i < 7; i++) {
-    displayDays.push(new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i));
-  }
-  
-  prevAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() - 7);
-  nextAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 7);
-  
-  const endOfWeek = displayDays[6];
-  let monthStr = startOfWeek.toLocaleString('en-GB', { month: 'short' });
-  if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
-    monthStr += ` / ${endOfWeek.toLocaleString('en-GB', { month: 'short' })}`;
-  }
-  headerTitle = `Week of ${startOfWeek.getDate()} ${monthStr} ${startOfWeek.getFullYear()}`;
-  
-  queryStart = getFormattedDate(startOfWeek);
-  queryEnd = getFormattedDate(endOfWeek);
-} 
-else if (view === 'day') {
-  displayDays.push(new Date(y, m, d));
-  prevAnchor = new Date(y, m, d - 1);
-  nextAnchor = new Date(y, m, d + 1);
-  headerTitle = anchor.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  
-  queryStart = getFormattedDate(anchor);
-  queryEnd = queryStart;
+  return `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`
 }
 
-const prevUrl = `/?v=${view}&d=${getFormattedDate(prevAnchor)}`;
-const nextUrl = `/?v=${view}&d=${getFormattedDate(nextAnchor)}`;
+const url = new URL(Astro.request.url)
+let view = url.searchParams.get('v') || 'month'
+if (!['month', 'week', 'day'].includes(view)) view = 'month'
 
-const db = Astro.locals.runtime.env.DB;
+let dateParam = url.searchParams.get('d')
+let anchor = dateParam ? new Date(dateParam) : new Date()
+if (isNaN(anchor.getTime())) anchor = new Date()
+
+const y = anchor.getFullYear()
+const m = anchor.getMonth()
+const d = anchor.getDate()
+
+let displayDays = []
+let prevAnchor, nextAnchor, headerTitle, queryStart, queryEnd
+
+if (view === 'month') {
+  const daysInMonth = new Date(y, m + 1, 0).getDate()
+  const firstDay = new Date(y, m, 1).getDay()
+  const startingBlanks = firstDay === 0 ? 6 : firstDay - 1
+  
+  for (let i = 0; i < startingBlanks; i++) displayDays.push(null)
+  for (let i = 1; i <= daysInMonth; i++) displayDays.push(new Date(y, m, i))
+  
+  prevAnchor = new Date(y, m - 1, 1)
+  nextAnchor = new Date(y, m + 1, 1)
+  headerTitle = anchor.toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+  
+  queryStart = getFormattedDate(new Date(y, m, 1))
+  queryEnd = getFormattedDate(new Date(y, m + 1, 0))
+} 
+else if (view === 'week') {
+  const dayOfWeek = anchor.getDay()
+  const diffToMonday = anchor.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
+  const startOfWeek = new Date(y, m, diffToMonday)
+  
+  for (let i = 0; i < 7; i++) {
+    displayDays.push(new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i))
+  }
+  
+  prevAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() - 7)
+  nextAnchor = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 7)
+  
+  const endOfWeek = displayDays[6]
+  let monthStr = startOfWeek.toLocaleString('en-GB', { month: 'short' })
+  if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
+    monthStr += ` / ${endOfWeek.toLocaleString('en-GB', { month: 'short' })}`
+  }
+  headerTitle = `Week of ${startOfWeek.getDate()} ${monthStr} ${startOfWeek.getFullYear()}`
+  
+  queryStart = getFormattedDate(startOfWeek)
+  queryEnd = getFormattedDate(endOfWeek)
+} 
+else if (view === 'day') {
+  displayDays.push(new Date(y, m, d))
+  prevAnchor = new Date(y, m, d - 1)
+  nextAnchor = new Date(y, m, d + 1)
+  headerTitle = anchor.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  
+  queryStart = getFormattedDate(anchor)
+  queryEnd = queryStart
+}
+
+const prevUrl = `/?v=${view}&d=${getFormattedDate(prevAnchor)}`
+const nextUrl = `/?v=${view}&d=${getFormattedDate(nextAnchor)}`
+
+const db = Astro.locals.runtime.env.DB
 const { results: rawEvents } = await db
   .prepare('SELECT * FROM events WHERE event_date >= ? AND event_date <= ? ORDER BY event_date ASC, start_time ASC')
   .bind(queryStart, queryEnd)
-  .all();
+  .all()
 
 const calendarDays = displayDays.map(dateObj => {
-  if (dateObj === null) return null;
-  const dateStr = getFormattedDate(dateObj);
+  if (dateObj === null) return null
+  const dateStr = getFormattedDate(dateObj)
   return {
     date: dateStr,
     dayNum: dateObj.getDate(),
     events: rawEvents.filter(e => e.event_date === dateStr)
-  };
-});
+  }
+})
 
 const getCategoryStyles = (category) => {
   switch (category) {
-    case 'West Ham': return 'bg-[#7A263A] text-white border-l-[4px] border-[#1BB1E7]';
-    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-[4px] border-amber-500';
-    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-[4px] border-emerald-500';
-    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-[4px] border-indigo-500';
-    case 'Work': return 'bg-slate-200 text-slate-800 border-l-[4px] border-slate-500';
-    default: return 'bg-slate-50 border border-slate-200 text-slate-800';
+    case 'West Ham': return 'bg-[#7A263A] text-white border-l-[4px] border-[#1BB1E7]'
+    case 'Appointment': return 'bg-amber-100 text-amber-900 border-l-[4px] border-amber-500'
+    case 'Social': return 'bg-emerald-100 text-emerald-900 border-l-[4px] border-emerald-500'
+    case 'Ministry': return 'bg-indigo-100 text-indigo-900 border-l-[4px] border-indigo-500'
+    case 'Work': return 'bg-slate-200 text-slate-800 border-l-[4px] border-slate-500'
+    default: return 'bg-slate-50 border border-slate-200 text-slate-800'
   }
-};
+}
 ---
 
 <html lang="en-GB">
@@ -172,7 +172,7 @@ const getCategoryStyles = (category) => {
           
           <div class={`grid ${view === 'day' ? 'grid-cols-1 max-w-2xl mx-auto gap-4 p-4' : 'grid-cols-7'}`}>
             {calendarDays.map((day, index) => {
-              const isLastInRow = (index + 1) % 7 === 0;
+              const isLastInRow = (index + 1) % 7 === 0
               return day === null ? (
                 <div class={`bg-slate-50 min-h-[140px] border-b border-slate-300 ${!isLastInRow ? 'border-r' : ''}`}></div>
               ) : (
@@ -183,7 +183,16 @@ const getCategoryStyles = (category) => {
                   </div>
                   <div class="flex flex-col gap-1 flex-1 overflow-y-auto no-scrollbar">
                     {day.events.map(event => (
-                      <div data-assigned={event.assigned_to || 'Family'} class={`event-item text-[11px] p-1.5 rounded-sm leading-tight break-words whitespace-normal ${getCategoryStyles(event.category)}`}>
+                      <div 
+                        data-id={event.id}
+                        data-title={event.title}
+                        data-date={event.event_date}
+                        data-time={event.start_time || ''}
+                        data-assigned={event.assigned_to || 'Family'}
+                        data-category={event.category || 'General'}
+                        data-notes={event.notes || ''}
+                        class={`event-item cursor-pointer hover:opacity-80 transition-opacity text-[11px] p-1.5 rounded-sm leading-tight break-words whitespace-normal ${getCategoryStyles(event.category)}`}
+                      >
                         <div class="font-bold">{event.title}</div>
                         {event.start_time && <div class="opacity-90 text-[10px] mt-0.5">{event.start_time}</div>}
                         {view === 'day' && event.notes && <div class="opacity-80 italic mt-1">{event.notes}</div>}
@@ -207,31 +216,33 @@ const getCategoryStyles = (category) => {
     <div id="add-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 safe-bottom">
       <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
         <div class="bg-slate-900 px-6 py-4 flex justify-between items-center">
-          <h2 class="text-white font-black text-lg">Add New Plan</h2>
+          <h2 id="modal-title" class="text-white font-black text-lg">Add New Plan</h2>
           <button id="close-modal" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
         </div>
         
         <form id="add-event-form" class="p-6 flex flex-col gap-4">
+          <input type="hidden" name="id" id="event-id" value="" />
+          
           <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">What is happening?</label>
-            <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Dinner with the Bucklands" />
+            <input type="text" name="title" id="event-title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Dinner with the Bucklands" />
           </div>
           
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-              <input type="date" name="event_date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={getFormattedDate(anchor)} />
+              <input type="date" name="event_date" id="event-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={getFormattedDate(anchor)} />
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Time</label>
-              <input type="time" name="start_time" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              <input type="time" name="start_time" id="event-time" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
           </div>
           
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Who</label>
-              <select name="assigned_to" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+              <select name="assigned_to" id="event-assigned" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
                 <option value="Family">Family</option>
                 <option value="Josh">Josh</option>
                 <option value="Tanya">Tanya</option>
@@ -240,7 +251,7 @@ const getCategoryStyles = (category) => {
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-              <select name="category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+              <select name="category" id="event-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
                 <option value="General">General</option>
                 <option value="Social">Social</option>
                 <option value="Appointment">Appointment</option>
@@ -253,11 +264,15 @@ const getCategoryStyles = (category) => {
 
           <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Notes (Optional)</label>
-            <input type="text" name="notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Location, reminders, etc" />
+            <input type="text" name="notes" id="event-notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Location, reminders, etc" />
           </div>
           
-          <button type="submit" class="mt-2 w-full bg-slate-900 text-white font-black text-lg py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-colors">
+          <button type="submit" id="submit-btn" class="mt-2 w-full bg-slate-900 text-white font-black text-lg py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-colors">
             Save to Calendar
+          </button>
+          
+          <button type="button" id="delete-btn" class="hidden w-full bg-red-50 text-red-600 font-bold text-base py-3 rounded-xl hover:bg-red-100 transition-colors">
+            Delete Plan
           </button>
         </form>
       </div>
@@ -283,138 +298,194 @@ const getCategoryStyles = (category) => {
     </style>
 
     <script>
-      const zoomSlider = document.getElementById('zoom-slider');
-      const calendarGrid = document.getElementById('calendar-grid');
+      const zoomSlider = document.getElementById('zoom-slider')
+      const calendarGrid = document.getElementById('calendar-grid')
 
       if (zoomSlider && calendarGrid) {
-        const savedZoom = localStorage.getItem('calendar-zoom') || '1';
-        zoomSlider.value = savedZoom;
-        calendarGrid.style.zoom = savedZoom;
+        const savedZoom = localStorage.getItem('calendar-zoom') || '1'
+        zoomSlider.value = savedZoom
+        calendarGrid.style.zoom = savedZoom
 
         zoomSlider.addEventListener('input', (e) => {
-          calendarGrid.style.zoom = e.target.value;
-          localStorage.setItem('calendar-zoom', e.target.value);
-        });
+          calendarGrid.style.zoom = e.target.value
+          localStorage.setItem('calendar-zoom', e.target.value)
+        })
 
-        // Custom Pinch-to-Zoom logic to bypass iOS PWA restrictions
-        let initialDistance = 0;
-        let initialZoom = 1;
+        let initialDistance = 0
+        let initialZoom = 1
 
         const getDistance = (touches) => {
-          const dx = touches[0].clientX - touches[1].clientX;
-          const dy = touches[0].clientY - touches[1].clientY;
-          return Math.sqrt(dx * dx + dy * dy);
-        };
+          const dx = touches[0].clientX - touches[1].clientX
+          const dy = touches[0].clientY - touches[1].clientY
+          return Math.sqrt(dx * dx + dy * dy)
+        }
 
         calendarGrid.addEventListener('touchstart', (e) => {
           if (e.touches.length === 2) {
-            initialDistance = getDistance(e.touches);
-            initialZoom = parseFloat(zoomSlider.value) || 1;
+            initialDistance = getDistance(e.touches)
+            initialZoom = parseFloat(zoomSlider.value) || 1
           }
-        }, { passive: true });
+        }, { passive: true })
 
         calendarGrid.addEventListener('touchmove', (e) => {
           if (e.touches.length === 2) {
-            e.preventDefault(); // Stop iOS from scrolling wildly when we pinch
-            const currentDistance = getDistance(e.touches);
-            const scale = currentDistance / initialDistance;
-            let newZoom = initialZoom * scale;
+            e.preventDefault()
+            const currentDistance = getDistance(e.touches)
+            const scale = currentDistance / initialDistance
+            let newZoom = initialZoom * scale
             
-            if (newZoom < 0.3) newZoom = 0.3;
-            if (newZoom > 1.5) newZoom = 1.5;
+            if (newZoom < 0.3) newZoom = 0.3
+            if (newZoom > 1.5) newZoom = 1.5
             
-            calendarGrid.style.zoom = newZoom;
-            zoomSlider.value = newZoom;
+            calendarGrid.style.zoom = newZoom
+            zoomSlider.value = newZoom
           }
-        }, { passive: false });
+        }, { passive: false })
 
         calendarGrid.addEventListener('touchend', (e) => {
           if (e.touches.length < 2) {
-            localStorage.setItem('calendar-zoom', zoomSlider.value);
+            localStorage.setItem('calendar-zoom', zoomSlider.value)
           }
-        }, { passive: true });
+        }, { passive: true })
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const currentView = urlParams.get('v') || 'month';
+      const urlParams = new URLSearchParams(window.location.search)
+      const currentView = urlParams.get('v') || 'month'
 
-      const dateSelector = document.getElementById('date-selector');
+      const dateSelector = document.getElementById('date-selector')
       dateSelector.addEventListener('change', (e) => {
-        window.location.href = `/?v=${currentView}&d=${e.target.value}`;
-      });
+        window.location.href = `/?v=${currentView}&d=${e.target.value}`
+      })
 
-      const modal = document.getElementById('add-modal');
-      const openBtn = document.getElementById('open-add-modal');
-      const closeBtn = document.getElementById('close-modal');
-      const form = document.getElementById('add-event-form');
-      const filterBtns = document.querySelectorAll('.filter-btn');
+      const modal = document.getElementById('add-modal')
+      const openBtn = document.getElementById('open-add-modal')
+      const closeBtn = document.getElementById('close-modal')
+      const form = document.getElementById('add-event-form')
+      const filterBtns = document.querySelectorAll('.filter-btn')
+      const modalTitle = document.getElementById('modal-title')
+      const submitBtn = document.getElementById('submit-btn')
+      const deleteBtn = document.getElementById('delete-btn')
 
-      openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+      openBtn.addEventListener('click', () => {
+        form.reset()
+        document.getElementById('event-id').value = ''
+        const todayStr = new Date().toISOString().split('T')[0]
+        document.getElementById('event-date').value = dateSelector.value || todayStr
+        modalTitle.innerText = 'Add New Plan'
+        submitBtn.innerText = 'Save to Calendar'
+        deleteBtn.classList.add('hidden')
+        modal.classList.remove('hidden')
+      })
       
       closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        modal.classList.add('hidden');
-      });
+        e.preventDefault()
+        modal.classList.add('hidden')
+      })
 
-      let activeFilter = 'All';
+      document.querySelectorAll('.event-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          document.getElementById('event-id').value = item.dataset.id
+          document.getElementById('event-title').value = item.dataset.title
+          document.getElementById('event-date').value = item.dataset.date
+          document.getElementById('event-time').value = item.dataset.time
+          document.getElementById('event-assigned').value = item.dataset.assigned
+          document.getElementById('event-category').value = item.dataset.category
+          document.getElementById('event-notes').value = item.dataset.notes
+
+          modalTitle.innerText = 'Edit Plan'
+          submitBtn.innerText = 'Update Plan'
+          deleteBtn.classList.remove('hidden')
+          modal.classList.remove('hidden')
+        })
+      })
 
       filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
           filterBtns.forEach(b => {
-            b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900');
+            b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900')
             if (b.dataset.person !== 'All') {
-              b.classList.add('opacity-50');
+              b.classList.add('opacity-50')
             }
-          });
+          })
           
-          const target = e.currentTarget;
-          target.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900');
-          target.classList.remove('opacity-50');
+          const target = e.currentTarget
+          target.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900')
+          target.classList.remove('opacity-50')
           
-          activeFilter = target.dataset.person;
+          const activeFilter = target.dataset.person
           
           document.querySelectorAll('.event-item').forEach(el => {
-            const assigned = el.dataset.assigned || 'Family';
+            const assigned = el.dataset.assigned || 'Family'
             if (activeFilter === 'All' || assigned === activeFilter) {
-              el.style.display = 'block';
+              el.style.display = 'block'
             } else {
-              el.style.display = 'none';
+              el.style.display = 'none'
             }
-          });
-        });
-      });
+          })
+        })
+      })
 
       form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerText;
-        submitBtn.innerText = 'Saving...';
-        submitBtn.disabled = true;
+        e.preventDefault()
+        const originalText = submitBtn.innerText
+        submitBtn.innerText = 'Saving...'
+        submitBtn.disabled = true
 
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+        const formData = new FormData(form)
+        const data = Object.fromEntries(formData.entries())
+        
+        const isUpdate = data.id !== ''
+        const endpoint = isUpdate ? `/api/events/${data.id}.json` : '/api/events.json'
+        const method = isUpdate ? 'PUT' : 'POST'
         
         try {
-          const res = await fetch('/api/events.json', {
-            method: 'POST',
+          const res = await fetch(endpoint, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-          });
+          })
           
           if (res.ok) {
-            window.location.reload();
+            window.location.reload()
           } else {
-            alert('Failed to save event. Check the network tab.');
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
+            alert('Failed to save event. Check the network tab.')
+            submitBtn.innerText = originalText
+            submitBtn.disabled = false
           }
         } catch (err) {
-          console.error(err);
-          alert('Network error whilst saving.');
-          submitBtn.innerText = originalText;
-          submitBtn.disabled = false;
+          console.error(err)
+          alert('Network error whilst saving.')
+          submitBtn.innerText = originalText
+          submitBtn.disabled = false
         }
-      });
+      })
+
+      deleteBtn.addEventListener('click', async () => {
+        const id = document.getElementById('event-id').value
+        if (!id) return
+        
+        const confirmDelete = confirm('Are you sure you want to delete this plan?')
+        if (!confirmDelete) return
+
+        deleteBtn.innerText = 'Deleting...'
+        deleteBtn.disabled = true
+
+        try {
+          const res = await fetch(`/api/events/${id}.json`, { method: 'DELETE' })
+          if (res.ok) {
+            window.location.reload()
+          } else {
+            alert('Failed to delete event.')
+            deleteBtn.innerText = 'Delete Plan'
+            deleteBtn.disabled = false
+          }
+        } catch (err) {
+          console.error(err)
+          alert('Network error whilst deleting.')
+          deleteBtn.innerText = 'Delete Plan'
+          deleteBtn.disabled = false
+        }
+      })
     </script>
   </body>
 </html>
