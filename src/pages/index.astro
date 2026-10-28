@@ -99,7 +99,7 @@ const getCategoryStyles = (category) => {
 <html lang="en-GB">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>J+T Calendar</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -136,12 +136,19 @@ const getCategoryStyles = (category) => {
           <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
         </div>
 
-        <div class="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+        <div class="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0 items-center">
           <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-xs ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap">All</button>
           <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-xs whitespace-nowrap">Family</button>
           <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs whitespace-nowrap">Josh</button>
           <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-xs whitespace-nowrap">Tanya</button>
           <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-xs whitespace-nowrap">Anelise</button>
+          
+          <div class="w-px h-6 bg-slate-700 shrink-0 mx-1"></div>
+          
+          <div class="flex items-center gap-2 shrink-0 bg-slate-800 rounded-full px-3 py-1.5">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Zoom</span>
+            <input type="range" id="zoom-slider" min="0.3" max="1.5" step="0.05" value="1" class="w-20 sm:w-24 accent-emerald-500" />
+          </div>
         </div>
       </div>
     </header>
@@ -149,7 +156,7 @@ const getCategoryStyles = (category) => {
     <main class="max-w-6xl mx-auto p-0 sm:p-4">
       
       <div class={`${view !== 'day' ? 'overflow-x-auto w-full bg-white shadow-sm sm:rounded-xl sm:border border-slate-300' : ''}`}>
-        <div class={`${view !== 'day' ? 'min-w-[1050px]' : ''}`}>
+        <div id="calendar-grid" class={`${view !== 'day' ? 'min-w-[1050px]' : ''}`}>
           
           {view !== 'day' && (
             <div class="grid grid-cols-7 bg-slate-100 font-bold text-slate-500 text-center uppercase text-[10px] tracking-widest border-b border-slate-300">
@@ -276,6 +283,20 @@ const getCategoryStyles = (category) => {
     </style>
 
     <script>
+      const zoomSlider = document.getElementById('zoom-slider');
+      const calendarGrid = document.getElementById('calendar-grid');
+
+      if (zoomSlider && calendarGrid) {
+        const savedZoom = localStorage.getItem('calendar-zoom') || '1';
+        zoomSlider.value = savedZoom;
+        calendarGrid.style.zoom = savedZoom;
+
+        zoomSlider.addEventListener('input', (e) => {
+          calendarGrid.style.zoom = e.target.value;
+          localStorage.setItem('calendar-zoom', e.target.value);
+        });
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       const currentView = urlParams.get('v') || 'month';
 
