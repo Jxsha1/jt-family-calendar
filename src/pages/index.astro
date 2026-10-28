@@ -121,7 +121,7 @@ const getCategoryStyles = (category) => {
             type="date" 
             id="date-selector"
             value={getFormattedDate(anchor)} 
-            class="bg-slate-800 text-slate-300 font-bold text-[10px] sm:text-xs rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none min-w-0"
+            class="bg-slate-800 text-slate-300 font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none min-w-0"
           />
         </div>
 
@@ -131,17 +131,17 @@ const getCategoryStyles = (category) => {
       <div class="max-w-6xl mx-auto px-3 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         
         <div class="flex bg-slate-800/80 rounded-lg p-1 shrink-0 w-full sm:w-auto justify-between backdrop-blur-md">
-          <a href={`/?v=day&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'day' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Day</a>
-          <a href={`/?v=week&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'week' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Week</a>
-          <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md text-xs font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
+          <a href={`/?v=day&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'day' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Day</a>
+          <a href={`/?v=week&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'week' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Week</a>
+          <a href={`/?v=month&d=${getFormattedDate(anchor)}`} class={`px-4 py-1.5 rounded-md font-bold text-center flex-1 sm:flex-none active:scale-95 transition-transform ${view === 'month' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'}`}>Month</a>
         </div>
 
         <div class="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0 items-center">
-          <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold text-xs ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap active:scale-95 transition-transform">All</button>
-          <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold text-xs whitespace-nowrap active:scale-95 transition-transform">Family</button>
-          <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs whitespace-nowrap active:scale-95 transition-transform">Josh</button>
-          <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold text-xs whitespace-nowrap active:scale-95 transition-transform">Tanya</button>
-          <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold text-xs whitespace-nowrap active:scale-95 transition-transform">Anelise</button>
+          <button data-person="All" class="filter-btn px-4 py-1.5 rounded-full bg-white text-slate-900 font-bold ring-2 ring-offset-2 ring-slate-900 ring-offset-slate-900 whitespace-nowrap active:scale-95 transition-transform">All</button>
+          <button data-person="Family" class="filter-btn px-4 py-1.5 rounded-full bg-slate-700 text-white font-bold whitespace-nowrap active:scale-95 transition-transform">Family</button>
+          <button data-person="Josh" class="filter-btn px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold whitespace-nowrap active:scale-95 transition-transform">Josh</button>
+          <button data-person="Tanya" class="filter-btn px-4 py-1.5 rounded-full bg-pink-600 text-white font-bold whitespace-nowrap active:scale-95 transition-transform">Tanya</button>
+          <button data-person="Anelise" class="filter-btn px-4 py-1.5 rounded-full bg-purple-500 text-white font-bold whitespace-nowrap active:scale-95 transition-transform">Anelise</button>
           
           <div class="w-px h-6 bg-slate-700 shrink-0 mx-1"></div>
           
@@ -226,24 +226,24 @@ const getCategoryStyles = (category) => {
           
           <div class="p-5 sm:p-6 flex flex-col gap-5 overflow-y-auto overflow-x-hidden overscroll-none no-scrollbar flex-1 touch-pan-y w-full">
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">What is happening?</label>
+              <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">What is happening?</label>
               <input type="text" name="title" id="event-title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Dinner with the Bucklands" />
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Date</label>
+                <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">Date</label>
                 <input type="date" name="event_date" id="event-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none min-w-0 block" value={getFormattedDate(anchor)} />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Time</label>
+                <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">Time</label>
                 <input type="time" name="start_time" id="event-time" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none min-w-0 block" />
               </div>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Who</label>
+                <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">Who</label>
                 <select name="assigned_to" id="event-assigned" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
                   <option value="Family">Family</option>
                   <option value="Josh">Josh</option>
@@ -252,7 +252,7 @@ const getCategoryStyles = (category) => {
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
+                <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
                 <select name="category" id="event-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
                   <option value="General">General</option>
                   <option value="Social">Social</option>
@@ -265,7 +265,7 @@ const getCategoryStyles = (category) => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Notes (Optional)</label>
+              <label class="block font-bold text-slate-500 uppercase tracking-wide mb-1.5">Notes (Optional)</label>
               <input type="text" name="notes" id="event-notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Location, reminders, etc" />
             </div>
           </div>
@@ -284,6 +284,25 @@ const getCategoryStyles = (category) => {
     </div>
 
     <style>
+      html {
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      html, body {
+        overscroll-behavior: none;
+      }
+
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+
+      button, a, .filter-btn, .event-item {
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       .safe-top { padding-top: env(safe-area-inset-top); }
